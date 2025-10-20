@@ -1687,3 +1687,96 @@ button .accent {
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
+/* ===== Toggle Switch (green / gray) ===== */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+  vertical-align: middle;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.toggle .toggle-slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: #e5e7eb; /* 회색(비활성) */
+  border-radius: 9999px;
+  transition: background 0.18s ease;
+}
+
+.toggle .toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 2px;
+  top: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.toggle input:checked + .toggle-slider {
+  background: #15e041; /* 초록(활성) */
+}
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.toggle input:disabled + .toggle-slider {
+  filter: grayscale(60%);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.device-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 8px;
+}
+.device-chips .chip {
+  border: 1px solid var(--line, #333);
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+}
+.device-chips .chip:disabled {
+  opacity: 1; /* 브라우저 기본 dim 제거 */
+  cursor: not-allowed; /* 클릭 불가 표시만 */
+}
+.device-chips .chip.on {
+  background: #15e041; /* 테마에 맞게 바꿔도 됨 */
+  border-color: #15e041;
+  color: #f8f7f7;
+}
+/* 숫자 버튼 기본 */
+.pagination .num {
+  border: 1px solid var(--line, #3a3a3a);
+  background: transparent;
+  color: #ddd;
+  padding: 4px 8px;
+  border-radius: 6px;
+  min-width: 32px;
+}
+
+/* 현재 페이지(초록색 강조) */
+.pagination .num.on {
+  background: #15e041; /* 초록색 */
+  border-color: #15e041;
+  color: #111; /* 가독성 위해 어두운 글자 */
+  font-weight: 700;
+}

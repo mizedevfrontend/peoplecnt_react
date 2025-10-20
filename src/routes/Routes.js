@@ -36,7 +36,7 @@ const AppRoutes = () => {
             path="/"
             element={
               isAuthenticated ? (
-                <Navigate to="main/home" />
+                <Navigate to="dashboard" />
               ) : (
                 <Login setIsAuthenticated={setIsAuthenticated} />
               )
@@ -52,6 +52,8 @@ const AppRoutes = () => {
                     <Routes>
                       {/* 홈 */}
                       <Route path="main/home" element={<MainHome />} />
+                      {/* 실시간 현황 */}
+                      <Route path="dashboard" element={<DashBoard />} />
                       {/* 방문내역 */}
                       <Route path="visitlist" element={<VisitList />} />
                       {/* 설정 */}
@@ -62,8 +64,6 @@ const AppRoutes = () => {
                   </DefaultLayout>
                 }
               />
-              {/* 실시간 현황 */}
-              <Route path="dashboard" element={<DashBoard />} />
             </>
           ) : (
             <Route path="*" element={<Navigate to="/" />} />

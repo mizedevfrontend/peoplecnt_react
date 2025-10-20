@@ -5,6 +5,9 @@ import IonIcon from "../components/IonIcon";
 const Header = ({ handleLogout }) => {
   const [currentDate, setCurrentDate] = useState(""); // 년월일
   const [currentTime, setCurrentTime] = useState(""); // 시분초
+  const [userType, setUserType] = useState(() =>
+    (localStorage.getItem("usertype") || "").toUpperCase()
+  );
   const location = useLocation();
 
   const formatDateTime = (date) => {
@@ -37,6 +40,16 @@ const Header = ({ handleLogout }) => {
     return () => clearInterval(interval); // 컴포넌트 언마운트 시 정리
   }, []);
 
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "usertype") {
+        setUserType((e.newValue || "").toUpperCase());
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const isActive = (path) => location.pathname.startsWith(path);
 
   return (
@@ -65,10 +78,10 @@ const Header = ({ handleLogout }) => {
           <NavLink
             to="/dashboard"
             className={isActive("/dashboard") ? "on" : ""}
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = "/dashboard";
-            }}
+            // onClick={(e) => {
+            //   e.preventDefault();
+            //   window.location.href = "/dashboard";
+            // }}
           >
             <IonIcon
               name={isActive("/dashboard") ? "IoGrid" : "IoGridOutline"}
@@ -98,18 +111,21 @@ const Header = ({ handleLogout }) => {
             />{" "}
             모니터링
           </NavLink>
-          <NavLink
-            to="/management"
-            className={isActive("/management") ? "on" : ""}
-          >
-            <IonIcon
-              name={
-                isActive("/management") ? "IoSettings" : "IoSettingsOutline"
-              }
-              size={24}
-            />{" "}
-            설정
-          </NavLink>
+          {/* ✅ 슈퍼관리자(S)에게만 보이도록 */}
+          {userType === "S" && (
+            <NavLink
+              to="/management"
+              className={isActive("/management") ? "on" : ""}
+            >
+              <IonIcon
+                name={
+                  isActive("/management") ? "IoSettings" : "IoSettingsOutline"
+                }
+                size={24}
+              />{" "}
+              설정
+            </NavLink>
+          )}
         </ul>
       </div>
       <div className="watchbox">

@@ -8,114 +8,37 @@ import IonIcon from "../components/IonIcon";
 const Management = () => {
   const { selectedWorkplaceId } = useWorkplace(); // Context 사용 // 다른페이지에서도 workplace 알아야 해서
   const [activeTab, setActiveTab] = useState("workplace"); // useState("device"); // 현재 활성 탭
-  const [currentDate, setCurrentDate] = useState(""); // 금일 날짜
-  const [startDate, setStartDate] = useState(""); // 인증로그 시작 날짜
-  const [endDate, setEndDate] = useState(""); // 인증로그 종료 날짜
-  const [jobCategories, setJobCategories] = useState(["전체보기"]); // 업무구분 목록
-  const [selectedCategory, setSelectedCategory] = useState("전체보기"); // 선택된 업무구분
-  const [selectedEntryStatus, setSelectedEntryStatus] = useState("전체"); // 입실여부
-  const [selectedAuthMethod, setSelectedAuthMethod] = useState("전체"); // 인증수단
-  const [selectedAuthResult, setSelectedAuthResult] = useState("전체"); // 인증결과
-  const [departmentKeyword, setDepartmentKeyword] = useState(""); // 소속 키워드
-  const [nameKeyword, setNameKeyword] = useState(""); // 이름 키워드
-  const [dailyResults, setDailyResults] = useState([]); // 일간출입자 데이터
-  const [authResults, setAuthResults] = useState([]); // 인증로그 데이터
-  const [dailyTotalCount, setDailyTotalCount] = useState(0); // 일간출입자 총 인원
-  const [authTotalCount, setAuthTotalCount] = useState(0); // 인증로그 총 인원
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState(null); // 인증로그 선택한 row
+
+  /* 사업장 관리용 */
+  const [selectedWorkplaceStatus, setSelectedWorkplaceStatus] =
+    useState("전체"); // 상태
+  const [workplaceResults, setWorkplaceResults] = useState([]); // 사업장 데이터
+  const [workplaceTotalCount, setWorkplaceTotalCount] = useState(0); // 사업장관리 총 건수
+  const [workplaceKeyword, setWorkplaceKeyword] = useState(""); // 사업장명 키워드
+  const [adminidKeyword, setAdminidKeyword] = useState(""); // 관리자ID 키워드
+  const [selectedWorkplaceRows, setSelectedWorkplaceRows] = useState([]);
+
+  /* 장치 관리용 */
+  const [selectedDeviceStatus, setSelectedDeviceStatus] = useState("전체"); // 장치상태
+  const [deviceResults, setDeviceResults] = useState([]); // 장치 데이터
+  const [deviceTotalCount, setDeviceTotalCount] = useState(0); // 장치 총 건수
+  const [devicenameKeyword, setDeviceNameKeyword] = useState(""); // 제품명 키워드
+  const [devicesnKeyword, setDeviceSNKeyword] = useState(""); // 시리얼번호 키워드
+  const [selectedDeviceRows, setSelectedDeviceRows] = useState([]);
+
+  const [updatingMap, setUpdatingMap] = useState({});
+  const keyW = (row) => `W-${row.workplaceid ?? row.workplaceId ?? row.no}`;
+  const keyD = (row) => `D-${row.eqTableId ?? row.sn ?? row.no}`;
+
+  const isActive = (v) => v === "Y" || v === "활성" || v === true || v === 1;
+  const toLabel = (v) => (isActive(v) ? "활성" : "비활성");
+  const toYN = (v) => (isActive(v) ? "Y" : "N");
+  const [selectedDevice, setSelectedDevice] = useState(null); // 인증로그 선택한 row
 
   useEffect(() => {
-    //const today = new Date().toISOString().split("T")[0];
-    const today = new Date().toLocaleDateString("en-CA");
-    setCurrentDate(today);
-    setStartDate(today);
-    setEndDate(today);
-
-    // 업무구분 API 호출
-    const fetchJobCategories = async () => {
-      try {
-        const response = await apiClient.post(
-          "/api/EntryExit/all-employee-group-list",
-          {
-            Page: 1,
-            PageSize: 100,
-            OrderType: 1,
-            WorkplaceId: selectedWorkplaceId,
-            LoginUserId: localStorage.getItem("userid"),
-          }
-        );
-
-        const responseData =
-          typeof response.data === "string"
-            ? JSON.parse(response.data)
-            : response.data;
-
-        if (!responseData || !responseData.data) {
-          setJobCategories([{ groupID: "", groupName: "전체보기" }]);
-          return;
-        }
-
-        console.log(response.data);
-
-        const categories = responseData.data.map((item) => ({
-          groupID: item.groupID,
-          groupName: item.groupName,
-        }));
-
-        setJobCategories([
-          { groupID: "", groupName: "전체보기" },
-          ...categories,
-        ]);
-      } catch (error) {
-        console.error("Failed to fetch job categories:", error);
-      }
-    };
-
-    fetchJobCategories();
-  }, [selectedWorkplaceId]);
-
-  const openPopup = (entry) => {
-    setSelectedEntry(entry);
-    setIsPopupOpen(true);
-  };
-
-  const downloadImage = async () => {
-    if (
-      !selectedEntry ||
-      !selectedEntry.imgFolderName ||
-      !selectedEntry.imgFileName
-    ) {
-      alert("다운로드할 이미지가 없습니다.");
-      return;
-    }
-
-    // 이미지 URL // 최종 적용 시 체크 해야 함
-    const imageUrl = `${selectedEntry.workplacePublicIP}/ImageLog/${selectedEntry.imgFolderName}/${selectedEntry.imgFileName}`;
-
-    try {
-      const response = await fetch(imageUrl, {
-        mode: "cors", // 서버에서 CORS 허용해야 함
-      });
-      if (!response.ok) {
-        throw new Error("이미지를 불러오지 못했습니다.");
-      }
-
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = selectedEntry.imgFileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl); // 메모리 해제
-    } catch (error) {
-      console.error("이미지 다운로드 실패:", error);
-      alert("이미지를 다운로드할 수 없습니다.");
-    }
-  };
+    if (activeTab === "workplace") setSelectedDeviceRows([]);
+    if (activeTab === "device") setSelectedWorkplaceRows([]);
+  }, [activeTab]);
 
   const handleSearch = useCallback(async () => {
     try {
@@ -126,38 +49,30 @@ const Management = () => {
         PageSize: 10,
       };
 
-      // 일간 출입자 검색
+      // 장치 관리
       if (activeTab === "device") {
-        params.date = currentDate;
-        params.category =
-          (selectedCategory === "전체보기" ? "" : selectedCategory) || ""; // groupID 값을 넘김
-        params.entryStatus =
-          selectedEntryStatus === "전체" ? "" : selectedEntryStatus;
-        params.CompanyTxt = departmentKeyword; // 소속 텍스트박스 값
-        params.EmployeeName = nameKeyword; // 이름 텍스트박스 값
+        params.deviceStatus =
+          selectedDeviceStatus === "전체" ? "" : selectedDeviceStatus;
+        params.workplaceName = workplaceKeyword; // 사업장명 텍스트박스 값
+        params.deviceName = devicenameKeyword; // 장치명
+        params.deviceSn = devicesnKeyword; // 장치SN번호
 
         console.log("----WorkplaceId----" + selectedWorkplaceId);
-        console.log("----StartDate----" + params.date);
-        console.log("----GroupId----" + params.category);
-        console.log("----EntryExitType----" + params.entryStatus);
-        console.log("----CompanyTxt----" + params.CompanyTxt);
-        console.log("----EmployeeName----" + params.EmployeeName);
+        console.log("----DeviceStatus----" + params.deviceStatus);
+        console.log("----WorkplaceName----" + params.workplaceName);
+        console.log("----DeviceName----" + params.deviceName);
+        console.log("----DeviceSN----" + params.deviceSn);
 
-        const response = await apiClient.post(
-          "/api/EntryExit/all-entryexit-data-list",
-          {
-            Page: 1,
-            PageSize: 100,
-            OrderType: "username_asc",
-            WorkplaceId: selectedWorkplaceId,
-            StartDate: params.date,
-            GroupId: params.category,
-            EntryExitType: params.entryStatus,
-            CompanyTxt: params.CompanyTxt,
-            EmployeeName: params.EmployeeName,
-            LoginUserId: localStorage.getItem("userid"),
-          }
-        );
+        const response = await apiClient.post("/api/Device/all-device-list", {
+          Page: 1,
+          PageSize: 100,
+          OrderType: "createddtm_desc",
+          DeviceStatus: params.deviceStatus,
+          WorkplaceName: params.workplaceName,
+          DeviceName: params.deviceName,
+          SN: params.deviceSn,
+          LoginUserId: localStorage.getItem("userid"),
+        });
 
         const responseData =
           typeof response.data === "string"
@@ -167,62 +82,54 @@ const Management = () => {
         console.log(response.data);
 
         if (response.data) {
-          const processedResults = responseData.data.map((item) => ({
-            category: item.groupName,
-            department: item.companyName,
-            rank: item.userTitle,
-            name: item.userName,
-            id: item.userId,
-            date: item.eventTime,
-            entryTime: item.startTime,
-            exitTime: item.endTime === "" ? "-" : item.endTime,
-            stayTime: item.diffTime === "" ? "-" : item.diffTime,
-            phone: item.phone,
-            status: item.inoutYN === "I" ? "입실중" : "퇴실",
+          const deviceResults = responseData.data.map((item) => ({
+            no: item.no,
+            eqTableId: item.eqTableId,
+            inhaEqId: item.inhaEqId,
+            companyId: item.companyId,
+            workplaceId: item.workplaceId,
+            productName: item.productName,
+            internalIpAddr: item.internalIpAddr,
+            externalIpAddr: item.externalIpAddr,
+            ptzYN: item.ptzYN,
+            sn: item.sn,
+            location: item.location,
+            activateYN: item.activateYN,
+            createddtm: item.createdDtm,
+            delyn: item.delYN,
+            deluserid: item.delUserId,
+            deleteddtm: item.deletedDtm,
+            workplaceName: item.workplaceName,
+            locationName: item.locationName,
+            rtspUrl: item.rtspUrl,
           }));
-          setDailyResults(processedResults);
+          setDeviceResults(deviceResults);
         } else {
-          setDailyResults([]);
+          setDeviceResults([]);
         }
 
-        setDailyTotalCount(responseData.meta?.totalCount || 0);
+        setDeviceTotalCount(responseData.meta?.totalCount || 0);
       }
-      // 인증로그 검색
+      // 사업장 관리
       else if (activeTab === "workplace") {
-        params.startDate = startDate;
-        params.endDate = endDate;
-        params.category =
-          (selectedCategory === "전체보기" ? "" : selectedCategory) || ""; // groupID 값을 넘김
-        params.authMethod =
-          selectedAuthMethod === "전체" ? "" : selectedAuthMethod;
-        params.authResult =
-          selectedAuthResult === "전체" ? "" : selectedAuthResult;
-        params.CompanyTxt = departmentKeyword; // 소속 텍스트박스 값
-        params.EmployeeName = nameKeyword; // 이름 텍스트박스 값
+        params.workplaceStatus =
+          selectedWorkplaceStatus === "전체" ? "" : selectedWorkplaceStatus;
+        params.workplaceName = workplaceKeyword; // 소속 텍스트박스 값
+        params.adminId = adminidKeyword; // 이름 텍스트박스 값
 
-        console.log("----WorkplaceId----" + selectedWorkplaceId);
-        console.log("----StartDate----" + params.startDate);
-        console.log("----EndDate----" + params.endDate);
-        console.log("----GroupId----" + params.category);
-        console.log("----AuthType----" + params.authMethod);
-        console.log("----AuthResult----" + params.authResult);
-        console.log("----CompanyTxt----" + params.CompanyTxt);
-        console.log("----EmployeeName----" + params.EmployeeName);
+        console.log("----workplaceStatus----" + params.workplaceStatus);
+        console.log("----WorkplaceName----" + params.workplaceName);
+        console.log("----AdminId----" + params.adminId);
 
         const response = await apiClient.post(
-          "/api/EntryExit/all-log-data-list",
+          "/api/Workplace/all-super-workplace-list",
           {
             Page: 1,
             PageSize: 100,
-            OrderType: "eventtime_desc",
-            WorkplaceId: selectedWorkplaceId,
-            StartDate: params.startDate,
-            EndDate: params.endDate,
-            GroupId: params.category,
-            AuthType: params.authMethod,
-            AuthResult: params.authResult,
-            CompanyTxt: params.CompanyTxt,
-            EmployeeName: params.EmployeeName,
+            OrderType: "createddtm_desc",
+            WorkplaceStatus: params.workplaceStatus,
+            WorkplaceName: params.workplaceName,
+            AdminId: params.adminId,
             LoginUserId: localStorage.getItem("userid"),
           }
         );
@@ -235,27 +142,32 @@ const Management = () => {
         console.log(response.data);
 
         if (response.data) {
-          const processedResults = responseData.data.map((item) => ({
-            date: item.eventTime,
-            category: item.groupName,
-            department: item.companyName,
-            rank: item.userTitle,
-            name: item.userName,
-            phone: item.phone,
-            device: item.deviceName,
-            method: item.authType,
-            result: item.eventDesc,
-            imgFolderName: item.imgFolderName,
-            imgFileName: item.imgFileName,
-            workplacePublicIP: item.workplacePublicIP,
+          const workplaceResults = responseData.data.map((item) => ({
+            no: item.no,
+            areaname: item.areaName,
+            workplaceid: item.workplaceId,
+            areaid: item.areaId,
+            companyname: item.companyName,
+            workplacename: item.workplaceName,
+            activateyn: item.activateYN,
+            delyn: item.delYN,
+            deluserid: item.delUserId,
+            deleteddtm: item.deletedDtm,
+            createddtm: item.createdDtm,
+            updateddtm: item.updatedDtm,
+            addr: item.addr,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            adminid: item.adminId,
+            equipareacnt: item.equipAreaCnt,
           }));
-          setAuthResults(processedResults);
+          setWorkplaceResults(workplaceResults);
         } else {
-          setAuthResults([]);
+          setWorkplaceResults([]);
         }
 
         console.log(responseData.meta?.totalCount);
-        setAuthTotalCount(responseData.meta?.totalCount || 0);
+        setWorkplaceTotalCount(responseData.meta?.totalCount || 0);
       }
     } catch (error) {
       console.error("Failed to fetch search results:", error);
@@ -263,19 +175,63 @@ const Management = () => {
   }, [
     selectedWorkplaceId,
     activeTab,
-    currentDate,
-    startDate,
-    endDate,
-    selectedCategory,
-    selectedEntryStatus,
-    selectedAuthMethod,
-    selectedAuthResult,
-    departmentKeyword,
-    nameKeyword,
+    selectedDeviceStatus,
+    selectedWorkplaceStatus,
+    workplaceKeyword,
+    adminidKeyword,
+    devicenameKeyword,
+    devicesnKeyword,
   ]);
 
-  const closePopup = () => {
-    setIsPopupOpen(false);
+  const toggleActivate = async (row) => {
+    const canEdit =
+      (localStorage.getItem("usertype") || "").toUpperCase() === "S";
+    if (!canEdit) {
+      alert("슈퍼 관리자만 변경할 수 있습니다.");
+      return;
+    }
+
+    const rowId = row.workplaceid ?? row.workplaceId ?? row.no; // 안전하게 키 추출
+    if (updatingMap[rowId]) return; // 중복 클릭 방지
+
+    const prevActive = isActive(row.activateyn);
+    const nextActive = !prevActive;
+
+    // Optimistic UI 업데이트
+    setUpdatingMap((m) => ({ ...m, [rowId]: true }));
+    setWorkplaceResults((list) =>
+      list.map((r) =>
+        (r.workplaceid ?? r.workplaceId ?? r.no) === rowId
+          ? { ...r, activateyn: nextActive ? "활성" : "비활성" }
+          : r
+      )
+    );
+
+    try {
+      await apiClient.post("/api/Workplace/set-activate", {
+        WorkplaceId: row.workplaceid,
+        ActivateYN: nextActive ? "Y" : "N",
+        LoginUserId: localStorage.getItem("userid"),
+      });
+    } catch (err) {
+      console.error("상태 변경 실패:", err);
+      alert("상태 변경에 실패했습니다. 다시 시도해주세요.");
+
+      // 롤백
+      setWorkplaceResults((list) =>
+        list.map((r) =>
+          (r.workplaceid ?? r.workplaceId ?? r.no) === rowId
+            ? { ...r, activateyn: prevActive ? "활성" : "비활성" }
+            : r
+        )
+      );
+    } finally {
+      setUpdatingMap((m) => {
+        const copy = { ...m };
+        delete copy[rowId];
+        return copy;
+      });
+    }
   };
 
   useEffect(() => {
@@ -293,52 +249,124 @@ const Management = () => {
     }
   };
   // 컴포넌트 안에 추가
-  const handleExcelDownload = async () => {
-    try {
-      // 템플릿 ID (DB의 excel_templates.id)
-      const templateId = 1;
+  // const handleExcelDownload = async () => {
+  //   try {
+  //     // 템플릿 ID (DB의 excel_templates.id)
+  //     const templateId = 1;
 
-      // 서버에 넘길 바디 (필요한 파라미터만 채워서 사용)
-      const payload =
-        activeTab === "workplace"
-          ? {
-              startDate,
-              endDate,
-            }
-          : {
-              // daily 탭일 때는 하루짜리로 내려주고 싶으면 이렇게
-              startDate: currentDate,
-              endDate: currentDate,
-            };
+  //     // 서버에 넘길 바디 (필요한 파라미터만 채워서 사용)
+  //     const payload =
+  //       activeTab === "workplace"
+  //         ? {
+  //             startDate,
+  //             endDate,
+  //           }
+  //         : {
+  //             // daily 탭일 때는 하루짜리로 내려주고 싶으면 이렇게
+  //             startDate: currentDate,
+  //             endDate: currentDate,
+  //           };
 
-      // 파일 다운로드 (axios 래퍼 apiClient 가정)
-      const res = await apiClient.post(`/api/Excel/excel-download`, payload, {
-        responseType: "blob",
-      });
+  //     // 파일 다운로드 (axios 래퍼 apiClient 가정)
+  //     const res = await apiClient.post(`/api/Excel/excel-download`, payload, {
+  //       responseType: "blob",
+  //     });
 
-      // 파일명 추출 (Content-Disposition 우선, 없으면 기본값)
-      const dispo = res.headers?.["content-disposition"] || "";
-      const match = dispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
-      const filename = match
-        ? decodeURIComponent(match[1].replace(/['"]/g, ""))
-        : `report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  //     // 파일명 추출 (Content-Disposition 우선, 없으면 기본값)
+  //     const dispo = res.headers?.["content-disposition"] || "";
+  //     const match = dispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+  //     const filename = match
+  //       ? decodeURIComponent(match[1].replace(/['"]/g, ""))
+  //       : `report_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
-      // 저장
-      const blobUrl = URL.createObjectURL(
-        new Blob([res.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        })
+  //     // 저장
+  //     const blobUrl = URL.createObjectURL(
+  //       new Blob([res.data], {
+  //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //       })
+  //     );
+  //     const a = document.createElement("a");
+  //     a.href = blobUrl;
+  //     a.download = filename;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     URL.revokeObjectURL(blobUrl);
+  //   } catch (err) {
+  //     console.error("엑셀 다운로드 실패:", err);
+  //     alert("엑셀 파일을 다운받을 수 없습니다.");
+  //   }
+  // };
+
+  // 전체 선택 토글
+  const handleSelectAll = (e) => {
+    if (activeTab === "device") {
+      setSelectedDeviceRows(
+        e.target.checked ? deviceResults.map((r) => r.no) : []
       );
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(blobUrl);
+    } else {
+      setSelectedWorkplaceRows(
+        e.target.checked ? workplaceResults.map((r) => r.no) : []
+      );
+    }
+  };
+
+  // 개별 선택 토글
+  const handleSelectRow = (id) => {
+    if (activeTab === "device") {
+      setSelectedDeviceRows((prev) =>
+        prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+      );
+    } else {
+      setSelectedWorkplaceRows((prev) =>
+        prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+      );
+    }
+  };
+  const toggleDeviceActivate = async (row) => {
+    const canEdit =
+      (localStorage.getItem("usertype") || "").toUpperCase() === "S";
+    if (!canEdit) {
+      alert("슈퍼 관리자만 변경할 수 있습니다.");
+      return;
+    }
+
+    const k = keyD(row);
+    if (updatingMap[k]) return;
+
+    const prevActive = isActive(row.activateYN);
+    const nextActive = !prevActive;
+
+    // optimistic
+    setUpdatingMap((m) => ({ ...m, [k]: true }));
+    setDeviceResults((list) =>
+      list.map((r) =>
+        keyD(r) === k ? { ...r, activateYN: nextActive ? "Y" : "N" } : r
+      )
+    );
+
+    try {
+      // ✅ 실제 API 엔드포인트/파라미터는 서버 규격에 맞게 조정
+      await apiClient.post("/api/Device/set-activate", {
+        EqTableId: row.eqTableId, // 또는 고유키(sn 등)
+        ActivateYN: nextActive ? "Y" : "N",
+        LoginUserId: localStorage.getItem("userid"),
+      });
     } catch (err) {
-      console.error("엑셀 다운로드 실패:", err);
-      alert("엑셀 파일을 다운받을 수 없습니다.");
+      console.error("장치 사용여부 변경 실패:", err);
+      alert("사용여부 변경에 실패했습니다. 다시 시도해주세요.");
+      // 롤백
+      setDeviceResults((list) =>
+        list.map((r) =>
+          keyD(r) === k ? { ...r, activateYN: prevActive ? "Y" : "N" } : r
+        )
+      );
+    } finally {
+      setUpdatingMap((m) => {
+        const copy = { ...m };
+        delete copy[k];
+        return copy;
+      });
     }
   };
 
@@ -364,141 +392,98 @@ const Management = () => {
       <div className="searchbox">
         {activeTab === "device" && (
           <>
-            <div className="date">
-              <span>일자:</span>
-              <input
-                type="date"
-                value={currentDate}
-                onChange={(e) => setCurrentDate(e.target.value)}
-              />
-            </div>
-            <div className="dropdown">
-              <span>업무구분:</span>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                {jobCategories.map((category) => (
-                  <option key={category.groupID} value={category.groupID}>
-                    {category.groupName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="btns">
-              <span>입실여부:</span>
-              {["전체", "입실중", "퇴실"].map((status) => (
+              <span>사용여부 :</span>
+              {["전체", "사용", "미사용"].map((status) => (
                 <button
                   key={status}
                   className={`small_btn ${
-                    selectedEntryStatus === status ? "on" : ""
+                    selectedDeviceStatus === status ? "on" : ""
                   }`}
-                  onClick={() => setSelectedEntryStatus(status)}
+                  onClick={() => setSelectedDeviceStatus(status)}
                 >
                   {status}
                 </button>
               ))}
             </div>
+
+            <div className="keyword">
+              <span>키워드 :</span>
+              <input
+                type="text"
+                placeholder="사업장명을 입력하세요."
+                value={workplaceKeyword}
+                onChange={(e) => setWorkplaceKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <input
+                type="text"
+                placeholder="제품명을 입력하세요."
+                value={devicenameKeyword}
+                onChange={(e) => setDeviceNameKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <input
+                type="text"
+                placeholder="시리얼넘버(S/N)를 입력하세요."
+                value={devicesnKeyword}
+                onChange={(e) => setDeviceSNKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <button className="small_btn on" onClick={handleSearch}>
+                <SvgIcons icon="zoom" /> 검색
+              </button>
+            </div>
           </>
         )}
         {activeTab === "workplace" && (
           <>
-            <div className="date">
-              <span>기간:</span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <span>~</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="dropdown">
-              <span>업무구분:</span>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                {jobCategories.map((category) => (
-                  <option key={category.groupID} value={category.groupID}>
-                    {category.groupName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             <div className="btns">
-              <span>인증수단:</span>
-              {["전체", "얼굴", "기타"].map((method) => (
+              <span>상태 :</span>
+              {["전체", "활성", "비활성"].map((method) => (
                 <button
                   key={method}
                   className={`small_btn ${
-                    selectedAuthMethod === method ? "on" : ""
+                    selectedWorkplaceStatus === method ? "on" : ""
                   }`}
-                  onClick={() => setSelectedAuthMethod(method)}
+                  onClick={() => setSelectedWorkplaceStatus(method)}
                 >
                   {method}
                 </button>
               ))}
             </div>
-            <div className="btns">
-              <span>인증결과:</span>
-              {["전체", "인증성공", "인증실패"].map((result) => (
-                <button
-                  key={result}
-                  className={`small_btn ${
-                    selectedAuthResult === result ? "on" : ""
-                  }`}
-                  onClick={() => setSelectedAuthResult(result)}
-                >
-                  {result}
-                </button>
-              ))}
+
+            <div className="keyword">
+              <span>키워드 :</span>
+              <input
+                type="text"
+                placeholder="사업장명을 입력하세요."
+                value={workplaceKeyword}
+                onChange={(e) => setWorkplaceKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <input
+                type="text"
+                placeholder="관리자 ID를 입력하세요."
+                value={adminidKeyword}
+                onChange={(e) => setAdminidKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <button className="small_btn on" onClick={handleSearch}>
+                <SvgIcons icon="zoom" /> 검색
+              </button>
             </div>
           </>
         )}
-        <div className="keyword">
-          <span>키워드:</span>
-          <input
-            type="text"
-            placeholder="소속을 입력하세요."
-            value={departmentKeyword}
-            onChange={(e) => setDepartmentKeyword(e.target.value)}
-            onKeyDown={(e) => handleKeyPress(e, "department")}
-          />
-          <input
-            type="text"
-            placeholder="이름을 입력하세요."
-            value={nameKeyword}
-            onChange={(e) => setNameKeyword(e.target.value)}
-            onKeyDown={(e) => handleKeyPress(e, "name")}
-          />
-          <button className="small_btn on" onClick={handleSearch}>
-            <SvgIcons icon="zoom" /> 검색
-          </button>
-        </div>
       </div>
       <div className="content">
         <div className="tablebox">
-          {/* 포스코인재창조원 엑셀다운 테스트 */}
-          {/* <button
-            className="small_btn"
-            style={{ marginLeft: 8 }}
-            onClick={handleExcelDownload}
-          >
-            <IonIcon name="IoDownloadOutline" size={18} /> 엑셀다운로드
-          </button> */}
           <div className="info">
             총
             <span>
-              {activeTab === "device" ? dailyTotalCount : authTotalCount}
+              {activeTab === "device" ? deviceTotalCount : workplaceTotalCount}
             </span>
-            <span>{activeTab === "device" ? "명" : "건"}</span>
+            <span>{activeTab === "device" ? "개" : "건"}</span>
           </div>
           <div className="table-container">
             <table>
@@ -506,146 +491,121 @@ const Management = () => {
                 <tr>
                   {activeTab === "device" ? (
                     <>
-                      <th>업무구분</th>
-                      <th>소속</th>
-                      <th>직급</th>
-                      <th>이름</th>
-                      <th>ID</th>
-                      <th>휴대폰번호</th>
-                      <th>입장</th>
-                      <th>퇴장</th>
-                      <th>체류시간</th>
-                      <th>입실여부</th>
+                      <th>
+                        {" "}
+                        <input
+                          type="checkbox"
+                          onChange={handleSelectAll}
+                          checked={
+                            deviceResults.length > 0 &&
+                            selectedDeviceRows.length === deviceResults.length
+                          }
+                        />
+                      </th>
+                      <th>번호</th>
+                      <th>사업장</th>
+                      <th>카메라위치</th>
+                      <th>PTZ여부</th>
+                      <th>제품명</th>
+                      <th>S/N</th>
+                      <th>생성일</th>
+                      <th>사용여부</th>
                     </>
                   ) : (
                     <>
-                      <th>일시</th>
-                      <th>업무구분</th>
-                      <th>소속</th>
-                      <th>직급</th>
-                      <th>이름</th>
-                      <th>휴대폰번호</th>
-                      <th>인증장치</th>
-                      <th>인증수단</th>
-                      <th>인증결과</th>
-                      <th>인증사진</th>
+                      <th>
+                        <input
+                          type="checkbox"
+                          onChange={handleSelectAll}
+                          checked={
+                            workplaceResults.length > 0 &&
+                            selectedWorkplaceRows.length ===
+                              workplaceResults.length
+                          }
+                        />
+                      </th>
+                      <th>번호</th>
+                      <th>사업장명</th>
+                      <th>구역</th>
+                      <th>관리자ID</th>
+                      <th>생성일</th>
+                      <th>수정일</th>
+                      <th>상태</th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {/* <tr>
-                <td>2024-06-28 13:52:52</td>
-                <td>감리</td>
-                <td>삼일엔지니어링</td>
-                <td>상무</td>
-                <td>박현진</td>
-                <td>010-1547-6632</td>
-                <td>입실_얼굴인식기#2</td>
-                <td>얼굴</td>
-                <td>인증성공</td>
-                <td onClick={() => setIsPopupOpen(true)}>
-                  <div className="align_center color_green">
-                    <IonIcon name="IoImage" size={22} color="#15E041" />
-                    사진보기
-                  </div>
-                </td>
-              </tr> */}
-                {(activeTab === "device" ? dailyResults : authResults).map(
-                  (result, index) => (
-                    <tr key={index}>
-                      {activeTab === "device" ? (
-                        <>
-                          <td>{result.category}</td>
-                          <td>{result.department}</td>
-                          <td>{result.rank}</td>
-                          <td>{result.name}</td>
-                          <td>{result.id}</td>
-                          <td>{result.phone}</td>
-                          <td>{result.entryTime}</td>
-                          <td>{result.exitTime}</td>
-                          <td>{result.stayTime}</td>
-                          <td>{result.status}</td>
-                        </>
-                      ) : (
-                        <>
-                          <td>{result.date}</td>
-                          <td>{result.category}</td>
-                          <td>{result.department}</td>
-                          <td>{result.rank}</td>
-                          <td>{result.name}</td>
-                          <td>{result.phone}</td>
-                          <td>{result.device}</td>
-                          <td>{result.method}</td>
-                          <td>{result.result}</td>
-                          <td>
-                            {result.imgFileName ? (
-                              <div
-                                className="align_center color_green"
-                                onClick={() => openPopup(result)}
-                                style={{ cursor: "pointer" }}
-                              >
-                                <IonIcon
-                                  name="IoImage"
-                                  size={22}
-                                  color="#15E041"
-                                />
-                                사진보기
-                              </div>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  )
-                )}
+                {(activeTab === "device"
+                  ? deviceResults
+                  : workplaceResults
+                ).map((result, index) => (
+                  <tr key={index}>
+                    {activeTab === "device" ? (
+                      <>
+                        <td>
+                          {" "}
+                          <input
+                            type="checkbox"
+                            checked={selectedDeviceRows.includes(result.no)}
+                            onChange={() => handleSelectRow(result.no)}
+                          />
+                        </td>
+                        <td>{result.no}</td>
+                        <td>{result.workplaceName}</td>
+                        <td>{result.locationName}</td>
+                        <td>{result.ptzYN}</td>
+                        <td>{result.productName}</td>
+                        <td>{result.sn}</td>
+                        <td>{result.createddtm}</td>
+                        <td>
+                          <label className="toggle">
+                            <input
+                              type="checkbox"
+                              checked={isActive(result.activateYN)}
+                              disabled={!!updatingMap[keyD(result)]}
+                              onChange={() => toggleDeviceActivate(result)}
+                            />
+                            <span className="toggle-slider"></span>
+                          </label>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>
+                          {" "}
+                          <input
+                            type="checkbox"
+                            checked={selectedWorkplaceRows.includes(result.no)}
+                            onChange={() => handleSelectRow(result.no)}
+                          />
+                        </td>
+                        <td>{result.no}</td>
+                        <td>{result.workplacename}</td>
+                        <td>{result.equipareacnt}</td>
+                        <td>{result.adminid}</td>
+                        <td>{result.createddtm}</td>
+                        <td>{result.updateddtm}</td>
+                        <td>
+                          <label className="toggle">
+                            <input
+                              type="checkbox"
+                              checked={isActive(result.activateyn)}
+                              disabled={!!updatingMap[keyW(result)]}
+                              onChange={() => toggleActivate(result)}
+                            />
+                            <span className="toggle-slider"></span>
+                          </label>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-      {isPopupOpen && selectedEntry && (
-        <Modal
-          isOpen={isPopupOpen}
-          onRequestClose={closePopup}
-          contentLabel="인증사진보기"
-          ariaHideApp={false}
-          className="pop_dimm_inner"
-          overlayClassName="pop_dimm"
-        >
-          <div className="popup">
-            <div className="popheader">
-              <div className="titlebox">
-                <div className="poptitle">
-                  <IonIcon name="IoImage" size={24} />
-                  {selectedEntry.device} ({selectedEntry.name})
-                </div>
-                <button onClick={closePopup}>
-                  <IonIcon name="IoClose" size={40} />
-                </button>
-              </div>
-            </div>
-            <div className="popbody">
-              <div className="pop_photobox">
-                <img
-                  src={`${selectedEntry.workplacePublicIP}/ImageLog/${selectedEntry.imgFolderName}/${selectedEntry.imgFileName}`}
-                  alt="인증사진"
-                />
-              </div>
-            </div>
-            <div className="popfooter">
-              <div className="bottombtns pop">
-                <button className="on" onClick={downloadImage}>
-                  <IonIcon name="IoCloudDownloadOutline" />
-                  사진저장
-                </button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };
