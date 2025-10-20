@@ -46,7 +46,7 @@ const Login = ({ setIsAuthenticated }) => {
 
         // 로그인 후 EntryExit 페이지로 이동
         setIsAuthenticated(true);
-        navigate("/entryexit");
+        navigate("/dashboard");
       } else {
         // 비밀번호가 실패시만 count 진행
         if (response.data.message === "비밀번호가 일치하지 않습니다.") {
