@@ -92,14 +92,14 @@ const DashBoard = () => {
                 <div className="box_titlebox">직전 1시간</div>
                 <div className="innerbox trans nomargin">
                   <div className="innerbox averagepadding">
-                    <div className="label">오후</div>
+                    <div className="label">입장</div>
                     <div className="numbox_small">
                       <div className="number">194</div>
                       <div className="unit">명</div>
                     </div>
                   </div>
                   <div className="innerbox averagepadding">
-                    <div className="label">오후</div>
+                    <div className="label">퇴장</div>
                     <div className="numbox_small">
                       <div className="number">194</div>
                       <div className="unit">명</div>
@@ -112,11 +112,11 @@ const DashBoard = () => {
               <div className="box_titlebox">현재체류현황</div>
               <div className="summarys innerbox">
                 <div className="summary ">
-                  <div className="summary_label">최다인원</div>
+                  <div className="summary_label">최다인원:</div>
                   <div className="summary_data">오후 2시</div>
                 </div>
                 <div className="summary">
-                  <div className="summary_label">최저인원</div>
+                  <div className="summary_label">최저인원:</div>
                   <div className="summary_data">오전 10시</div>
                 </div>
               </div>
