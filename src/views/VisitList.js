@@ -556,10 +556,12 @@ const VisitList = () => {
 
   const DeviceChips = () => (
     <div className="device-chips">
+      {" "}
+      장비선택:
       {deviceList.length === 0 ? (
         // 👉 on 클래스로 활성 스타일 부여 + disabled로 클릭 방지
         <button
-          className="chip on no-device"
+          className="chip no-device"
           disabled
           aria-disabled="true"
           tabIndex={-1}
@@ -607,15 +609,15 @@ const VisitList = () => {
       </div>
 
       <DeviceChips />
-
       {/* 금일 서브탭 */}
       {activeTab === "today" && (
         <>
           <p className="desc">
-            오늘 방문객의 입퇴장 수 및 시간대 체류 인원을 조회합니다.
+            ※ 오늘 방문객의 입퇴장 수 및 시간대 체류 인원을 조회합니다.
             <br />※ 수집 과정에서 일부 오차가 발생할 수 있습니다.
           </p>
           <div className="subtabs">
+            조회구분:
             <button
               className={`small_btn ${todaySubTab === "io" ? "on" : ""}`}
               onClick={() => {
@@ -623,7 +625,7 @@ const VisitList = () => {
                 setTodayInoutPage(1);
               }}
             >
-              입출 정보
+              입출정보
             </button>
             <button
               className={`small_btn ${todaySubTab === "stay" ? "on" : ""}`}
@@ -632,7 +634,7 @@ const VisitList = () => {
                 setTodayStayPage(1);
               }}
             >
-              체류 정보
+              체류정보
             </button>
           </div>
         </>
@@ -641,32 +643,36 @@ const VisitList = () => {
       {/* 금일 - 입출 정보 */}
       {activeTab === "today" && todaySubTab === "io" && (
         <div className="content">
-          <div className="stat-row two">
-            <StatCard label="총 입장" value={todayInTotal} />
-            <StatCard label="총 퇴장" value={todayOutTotal} />
-          </div>
-
           <div className="tablebox">
-            <div className="info">
-              총 <span>{todayInoutTotal}</span>건
-              <div className="actions">
-                <div className="page-size">
-                  <select
-                    value={pageSize}
-                    onChange={(e) =>
-                      handlePageSizeChange(Number(e.target.value))
-                    }
-                  >
-                    {[10, 20, 50].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
+            <div className="table_count">
+              <div className="info">
+                <div>
+                  총 <span>{todayInoutTotal}</span>건
                 </div>
-                {/* <button className="small_btn on" onClick={handleExcelDownload}>
+                <div className="actions">
+                  <div className="page-size">
+                    <select
+                      value={pageSize}
+                      onChange={(e) =>
+                        handlePageSizeChange(Number(e.target.value))
+                      }
+                    >
+                      {[10, 20, 50].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <div>개씩</div>
+                  </div>
+                  {/* <button className="small_btn on" onClick={handleExcelDownload}>
                   <SvgIcons icon="download" /> 엑셀 다운로드
                 </button> */}
+                </div>
+              </div>
+              <div className="statbox">
+                <StatCard label="총 입장" value={todayInTotal} />
+                <StatCard label="총 퇴장" value={todayOutTotal} />
               </div>
             </div>
 
@@ -716,26 +722,31 @@ const VisitList = () => {
       {activeTab === "today" && todaySubTab === "stay" && (
         <div className="content">
           <div className="tablebox">
-            <div className="info">
-              총 <span>{todayStayTotal}</span>건
-              <div className="actions">
-                <div className="page-size">
-                  <select
-                    value={pageSize}
-                    onChange={(e) =>
-                      handlePageSizeChange(Number(e.target.value))
-                    }
-                  >
-                    {[10, 20, 50].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
+            <div className="table_count">
+              <div className="info">
+                <div>
+                  총 <span>{todayStayTotal}</span>건
                 </div>
-                {/* <button className="small_btn on" onClick={handleExcelDownload}>
+                <div className="actions">
+                  <div className="page-size">
+                    <select
+                      value={pageSize}
+                      onChange={(e) =>
+                        handlePageSizeChange(Number(e.target.value))
+                      }
+                    >
+                      {[10, 20, 50].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <div>개씩</div>
+                  </div>
+                  {/* <button className="small_btn on" onClick={handleExcelDownload}>
                   <SvgIcons icon="download" /> 엑셀 다운로드
                 </button> */}
+                </div>
               </div>
             </div>
 
@@ -781,13 +792,13 @@ const VisitList = () => {
 
       {/* 일자별 */}
       {activeTab === "daily" && (
-        <div className="content">
-          <p className="desc">
-            당일 방문객의 입.퇴장 수를 일별로 조회합니다.
+        <>
+          <div className="desc">
+            ※ 당일 방문객의 입·퇴장 수를 일별로 조회합니다.
             <br />※ 수집 과정에서 일부 오차가 발생할 수 있습니다.
-          </p>
-
-          <div className="range-filter">
+          </div>
+          <div className="subtabs">
+            조회구분:
             <input
               type="date"
               value={range.start}
@@ -797,7 +808,7 @@ const VisitList = () => {
               }}
               max={range.end || fmt(today)}
             />
-            …
+            ~
             <input
               type="date"
               value={range.end}
@@ -808,98 +819,104 @@ const VisitList = () => {
               min={range.start || ""}
               max={fmt(today)}
             />
-            <div className="quick">
-              <button
-                className={`small_btn ${rangePreset === "today" ? "on" : ""}`}
-                onClick={() => quickSet("today")}
-              >
-                오늘
-              </button>
-              <button
-                className={`small_btn ${rangePreset === "7d" ? "on" : ""}`}
-                onClick={() => quickSet("7d")}
-              >
-                7일
-              </button>
-              <button
-                className={`small_btn ${rangePreset === "1m" ? "on" : ""}`}
-                onClick={() => quickSet("1m")}
-              >
-                1개월
-              </button>
-            </div>
+            <div className="quick"></div>
+            <button
+              className={`small_btn ${rangePreset === "today" ? "on" : ""}`}
+              onClick={() => quickSet("today")}
+            >
+              오늘
+            </button>
+            <button
+              className={`small_btn ${rangePreset === "7d" ? "on" : ""}`}
+              onClick={() => quickSet("7d")}
+            >
+              7일
+            </button>
+            <button
+              className={`small_btn ${rangePreset === "1m" ? "on" : ""}`}
+              onClick={() => quickSet("1m")}
+            >
+              1개월
+            </button>
           </div>
+          <div className="content">
+            <div className="range-filter"></div>
 
-          <div className="stat-row three">
-            <StatCard label="최근 7일" value={dailyCards.last7} /> /
-            <StatCard label="최근 1개월" value={dailyCards.last30} /> /
-            <StatCard label="올해 누적" value={dailyCards.ytd} /> /
-          </div>
-
-          <div className="tablebox">
-            <div className="info">
-              총 <span>{dailyTotal}</span>건
-              <div className="actions">
-                <div className="page-size">
-                  <select
-                    value={pageSize}
-                    onChange={(e) =>
-                      handlePageSizeChange(Number(e.target.value))
-                    }
-                  >
-                    {[10, 20, 50].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {/* <button className="small_btn on" onClick={handleExcelDownload}>
+            <div className="tablebox">
+              <div className="table_count">
+                <div className="info">
+                  <div>
+                    총 <span>{dailyTotal}</span>건
+                  </div>
+                  <div className="actions">
+                    <div className="page-size">
+                      <select
+                        value={pageSize}
+                        onChange={(e) =>
+                          handlePageSizeChange(Number(e.target.value))
+                        }
+                      >
+                        {[10, 20, 50].map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                      <div>개씩</div>
+                    </div>
+                    {/* <button className="small_btn on" onClick={handleExcelDownload}>
                   <SvgIcons icon="download" /> 엑셀 다운로드
                 </button> */}
+                  </div>
+                </div>
+                <div className="statbox">
+                  <StatCard label="최근 7일:" value={dailyCards.last7} />
+                  <StatCard label="최근 1개월:" value={dailyCards.last30} />
+                  <StatCard label="올해 누적:" value={dailyCards.ytd} />
+                </div>
               </div>
-            </div>
 
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>번호</th>
-                    <th>일자</th>
-                    <th>입장</th>
-                    <th>퇴장</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dailyList.length === 0 ? (
+              <div className="table-container">
+                <table>
+                  <thead>
                     <tr>
-                      <td colSpan={4} style={{ textAlign: "center" }}>
-                        데이터가 없습니다
-                      </td>
+                      <th>번호</th>
+                      <th>일자</th>
+                      <th>입장</th>
+                      <th>퇴장</th>
                     </tr>
-                  ) : (
-                    dailyList.map((r) => (
-                      <tr key={r.no}>
-                        <td>{r.no}</td>
-                        <td>{r.date}</td>
-                        <td>{r.inCount}</td>
-                        <td>{r.outCount}</td>
+                  </thead>
+                  <tbody>
+                    {dailyList.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: "center" }}>
+                          데이터가 없습니다
+                        </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      dailyList.map((r) => (
+                        <tr key={r.no}>
+                          <td>{r.no}</td>
+                          <td>{r.date}</td>
+                          <td>{r.inCount}</td>
+                          <td>{r.outCount}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            {dailyList.length > 0 && (
-              <Pagination
-                page={dailyPage}
-                total={dailyTotal}
-                onChange={setDailyPage}
-              />
-            )}
+              {dailyList.length > 0 && (
+                <Pagination
+                  page={dailyPage}
+                  total={dailyTotal}
+                  onChange={setDailyPage}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

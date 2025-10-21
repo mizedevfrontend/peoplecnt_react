@@ -390,7 +390,7 @@ const DashBoard = () => {
                   <div className="summary_label">최다인원 : </div>
                   <div className="summary_data">{board.MaxHourTime}</div>
                 </div>
-                /
+               
                 <div className="summary">
                   <div className="summary_label">최저인원 : </div>
                   <div className="summary_data">{board.MinHourTime}</div>
