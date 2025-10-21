@@ -65,7 +65,7 @@ const Header = ({ handleLogout }) => {
       <div className="navbox">
         <ul>
           {/* 홈 , 실시간 현황, 방문내역 (오늘, 일별조회), 모니터링, 설정 ( 사업장관리, 장치관리 )*/}
-          <NavLink
+          {/* <NavLink
             to="/main/home"
             className={isActive("/main/home") ? "on" : ""}
           >
@@ -74,7 +74,7 @@ const Header = ({ handleLogout }) => {
               size={24}
             />{" "}
             홈
-          </NavLink>
+          </NavLink> */}
           <NavLink
             to="/dashboard"
             className={isActive("/dashboard") ? "on" : ""}
