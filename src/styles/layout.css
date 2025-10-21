@@ -1945,3 +1945,62 @@ button .accent {
 .device_selectbox button.device_name.on svg {
   opacity: 1;
 }
+/* ✅ 차트 포커스/활성시 아웃라인 제거 */
+.graph_type1,
+.graph_type1 * {
+  outline: none !important;
+}
+
+/* ✅ Recharts 내부 래퍼/ SVG 포커스 제거 */
+.graph_type1 .recharts-wrapper,
+.graph_type1 .recharts-surface {
+  outline: none !important;
+}
+.graph_type1 .recharts-wrapper:focus,
+.graph_type1 .recharts-wrapper:active,
+.graph_type1 .recharts-surface:focus,
+.graph_type1 .recharts-surface:active {
+  outline: none !important;
+}
+
+/* ✅ 클릭 하이라이트 제거(Chrome/Edge) */
+.graph_type1 .recharts-wrapper *,
+.graph_type1 .recharts-surface * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ✅ Firefox 내부 focus border 제거 */
+.graph_type1 .recharts-wrapper *::-moz-focus-inner,
+.graph_type1 .recharts-surface *::-moz-focus-inner {
+  border: 0 !important;
+}
+
+/* ✅ 차트 포커스/활성시 아웃라인 제거 */
+.graph_type2,
+.graph_type2 * {
+  outline: none !important;
+}
+
+/* ✅ Recharts 내부 래퍼/ SVG 포커스 제거 */
+.graph_type2 .recharts-wrapper,
+.graph_type2 .recharts-surface {
+  outline: none !important;
+}
+.graph_type2 .recharts-wrapper:focus,
+.graph_type2 .recharts-wrapper:active,
+.graph_type2 .recharts-surface:focus,
+.graph_type2 .recharts-surface:active {
+  outline: none !important;
+}
+
+/* ✅ 클릭 하이라이트 제거(Chrome/Edge) */
+.graph_type2 .recharts-wrapper *,
+.graph_type2 .recharts-surface * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ✅ Firefox 내부 focus border 제거 */
+.graph_type2 .recharts-wrapper *::-moz-focus-inner,
+.graph_type2 .recharts-surface *::-moz-focus-inner {
+  border: 0 !important;
+}
