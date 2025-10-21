@@ -47,7 +47,13 @@ const VisitList = () => {
   const [dailyPage, setDailyPage] = useState(1);
 
   /** 유틸 */
-  const fmt = (d) => d.toISOString().slice(0, 10);
+  const fmt = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const date = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${date}`;
+  };
+
   const today = useMemo(() => new Date(), []);
 
   const quickSet = (type) => {
