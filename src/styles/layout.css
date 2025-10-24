@@ -2130,6 +2130,10 @@ input[type="date"]::-webkit-datetime-edit-ampm-field {
   outline: none !important;
 }
 
+.recharts-tooltip-wrapper > div {
+  flex-direction: column;
+}
+
 /* ✅ 클릭 하이라이트 제거(Chrome/Edge) */
 .graph_type2 .recharts-wrapper *,
 .graph_type2 .recharts-surface * {
