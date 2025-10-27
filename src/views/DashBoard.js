@@ -61,7 +61,11 @@ const DashBoard = () => {
 
       setDeviceList(rows);
       setDeviceTotal(data?.meta?.totalCount ?? rows.length);
-      setSelectedEqTableId((prev) => prev ?? rows[0]?.eqTableId ?? null);
+      //setSelectedEqTableId((prev) => prev ?? rows[0]?.eqTableId ?? null);
+      setSelectedEqTableId((prev) => {
+        const exists = rows.some((r) => r.eqTableId === prev);
+        return exists ? prev : rows[0]?.eqTableId ?? null;
+      });
     } catch (err) {
       console.error("[ERR] DEVICE_LIST", getStatus(err), err);
       setDeviceList([]);
@@ -71,6 +75,9 @@ const DashBoard = () => {
   }, [DASHBOARD_API.DEVICE_LIST, devicePage, selectedWorkplaceId]);
 
   useEffect(() => {
+    // workplace가 바뀌면 이전 eq 선택을 지워서
+    // 새 목록이 올 때 rows[0]로 자연스럽게 맞춰지게 함
+    setSelectedEqTableId(null);
     fetchDeviceList();
   }, [fetchDeviceList]);
 
@@ -390,7 +397,7 @@ const DashBoard = () => {
                   <div className="summary_label">최다인원 : </div>
                   <div className="summary_data">{board.MaxHourTime}</div>
                 </div>
-               
+
                 <div className="summary">
                   <div className="summary_label">최저인원 : </div>
                   <div className="summary_data">{board.MinHourTime}</div>
