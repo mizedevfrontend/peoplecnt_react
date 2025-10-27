@@ -99,7 +99,7 @@ const Header = ({ handleLogout }) => {
             />
             방문내역
           </NavLink>
-          <NavLink
+          {/* <NavLink
             to="/realtimevideo"
             className={isActive("/realtimevideo") ? "on" : ""}
           >
@@ -110,7 +110,7 @@ const Header = ({ handleLogout }) => {
               size={24}
             />{" "}
             모니터링
-          </NavLink>
+          </NavLink> */}
           {/* ✅ 슈퍼관리자(S)에게만 보이도록 */}
           {userType === "S" && (
             <NavLink
