@@ -56,6 +56,31 @@ textarea {
   color: #fff;
 }
 
+.excel_btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0 10px;
+  height: 33px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1em;
+  gap: 6px;
+}
+.excel_btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+}
+.excel_btn:active {
+  background-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.8);
+}
+.excel_btn.on {
+  background-color: #299f40;
+  color: #fff;
+}
+
 input[type="checkbox"] {
   opacity: 0.5;
   appearance: none;
