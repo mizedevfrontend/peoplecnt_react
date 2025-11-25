@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useWorkplace } from "../context/WorkplaceContext";
 import SvgIcons from "../layouts/SvgIcons";
 import apiClient from "../apiClient";
+import * as XLSX from "xlsx";
 
 const VisitList = () => {
   const { selectedWorkplaceId } = useWorkplace();
@@ -431,52 +432,104 @@ const VisitList = () => {
   ]); // 🔸장치 연동
 
   /** 엑셀 다운로드 (장치필터 추가) */
+  /** 엑셀 다운로드: API 호출 → JSON → 엑셀 생성 */
   const handleExcelDownload = async () => {
     try {
       let url = "";
       let payload = {};
+
+      /** 1) API URL 및 payload 구성 */
       if (activeTab === "today" && todaySubTab === "io") {
-        url = "/api/Excel/today-inout";
+        url = "/api/VisitList/today-inout-list";
         payload = {
           WorkplaceId: selectedWorkplaceId,
           EqTableId: selectedEqTableId,
+          Page: todayInoutPage,
+          PageSize: pageSize,
+          OrderType: "time_asc",
+          LoginUserId: localStorage.getItem("userid"),
         };
       } else if (activeTab === "today" && todaySubTab === "stay") {
-        url = "/api/Excel/today-stay";
+        url = "/api/VisitList/today-stay-list";
         payload = {
           WorkplaceId: selectedWorkplaceId,
           EqTableId: selectedEqTableId,
+          Page: todayStayPage,
+          PageSize: pageSize,
+          OrderType: "time_asc",
+          LoginUserId: localStorage.getItem("userid"),
         };
       } else {
-        url = "/api/Excel/daily-summary";
+        url = "/api/VisitList/daily-summary-list";
         payload = {
           WorkplaceId: selectedWorkplaceId,
+          EqTableId: selectedEqTableId,
           StartDate: range.start,
           EndDate: range.end,
-          EqTableId: selectedEqTableId,
+          Page: dailyPage,
+          PageSize: pageSize,
+          OrderType: "date_desc",
+          LoginUserId: localStorage.getItem("userid"),
         };
       }
-      const res = await apiClient.post(url, payload, { responseType: "blob" });
-      const dispo = res.headers?.["content-disposition"] || "";
-      const match = dispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
-      const filename = match
-        ? decodeURIComponent(match[1].replace(/['"]/g, ""))
-        : `visit_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      const blobUrl = URL.createObjectURL(
-        new Blob([res.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        })
-      );
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(blobUrl);
+
+      /** 2) API 호출(JSON 받기 → blob 말고 JSON으로 받아야 한다!) */
+      const res = await apiClient.post(url, payload);
+
+      let data = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+
+      const rows = data.data || [];
+      const meta = data.meta || {};
+
+      if (!rows || rows.length === 0) {
+        alert("엑셀로 내보낼 데이터가 없습니다.");
+        return;
+      }
+
+      /** 3) JSON → 엑셀 변환 */
+      let sheetName = "";
+      let excelRows = [];
+
+      if (activeTab === "today" && todaySubTab === "io") {
+        sheetName = "금일_입출정보";
+
+        excelRows = rows.map((r) => ({
+          번호: r.no,
+          시간대: r.hourPeriod,
+          입장: r.inCnt,
+          퇴장: r.outCnt,
+        }));
+      } else if (activeTab === "today" && todaySubTab === "stay") {
+        sheetName = "금일_체류정보";
+
+        excelRows = rows.map((r) => ({
+          번호: r.no,
+          시간: r.timeUnit,
+          체류인원: r.stayCnt,
+        }));
+      } else {
+        sheetName = "일자별_입출정보";
+
+        excelRows = rows.map((r) => ({
+          번호: r.no,
+          일자: r.dateUnit,
+          입장: r.inCnt,
+          퇴장: r.outCnt,
+        }));
+      }
+
+      /** 4) XLSX 생성 */
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelRows);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const fileName = `visit_${sheetName}_${todayStr}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
     } catch (err) {
       console.error("엑셀 다운로드 실패:", err);
-      alert("엑셀 파일을 다운받을 수 없습니다.");
+      alert("엑셀 다운로드 중 오류가 발생했습니다.");
     }
   };
 
@@ -665,14 +718,15 @@ const VisitList = () => {
                     </select>
                     <div>개씩</div>
                   </div>
-                  {/* <button className="small_btn on" onClick={handleExcelDownload}>
-                  <SvgIcons icon="download" /> 엑셀 다운로드
-                </button> */}
                 </div>
               </div>
               <div className="statbox">
                 <StatCard label="총 입장" value={todayInTotal} />
                 <StatCard label="총 퇴장" value={todayOutTotal} />
+
+                <button className="small_btn on" onClick={handleExcelDownload}>
+                  엑셀 다운로드
+                </button>
               </div>
             </div>
 
@@ -743,10 +797,12 @@ const VisitList = () => {
                     </select>
                     <div>개씩</div>
                   </div>
-                  {/* <button className="small_btn on" onClick={handleExcelDownload}>
-                  <SvgIcons icon="download" /> 엑셀 다운로드
-                </button> */}
                 </div>
+              </div>
+              <div className="statbox">
+                <button className="small_btn on" onClick={handleExcelDownload}>
+                  엑셀 다운로드
+                </button>
               </div>
             </div>
 
@@ -841,7 +897,6 @@ const VisitList = () => {
           </div>
           <div className="content">
             <div className="range-filter"></div>
-
             <div className="tablebox">
               <div className="table_count">
                 <div className="info">
@@ -864,15 +919,19 @@ const VisitList = () => {
                       </select>
                       <div>개씩</div>
                     </div>
-                    {/* <button className="small_btn on" onClick={handleExcelDownload}>
-                  <SvgIcons icon="download" /> 엑셀 다운로드
-                </button> */}
                   </div>
                 </div>
                 <div className="statbox">
                   <StatCard label="최근 7일:" value={dailyCards.last7} />
                   <StatCard label="최근 1개월:" value={dailyCards.last30} />
                   <StatCard label="올해 누적:" value={dailyCards.ytd} />
+
+                  <button
+                    className="small_btn on"
+                    onClick={handleExcelDownload}
+                  >
+                    엑셀 다운로드
+                  </button>
                 </div>
               </div>
 
